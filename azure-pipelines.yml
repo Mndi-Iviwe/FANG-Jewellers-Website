@@ -1,0 +1,52 @@
+# Starter pipeline
+# Azure DevOps Starter Pipeline for FANGJewellerz Website
+# This pipeline builds and prepares the PHP application for deployment.
+
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+  branches:
+    include:
+      - main # Trigger the pipeline on commits to the main branch
+
+pool:
+  vmImage: 'ubuntu-latest' # Use the latest Ubuntu VM image for the build
+
+steps:
+  # Step 1: Install PHP
+  - task: PowerShell@2
+    inputs:
+      version: '7.4' # Specify the PHP version required by the application
+    displayName: 'Set up PHP'
+
+  # Step 2: Install dependencies using Composer
+  - script: |
+      sudo apt-get update
+      sudo apt-get install -y composer
+      composer install
+    displayName: 'Install dependencies'
+
+  # Step 3: Run Lint Check
+  - script: |
+      php -l Index.php
+      echo "Linting completed successfully."
+    displayName: 'Run PHP Lint Check'
+
+  # Step 4: Archive the files for deployment
+  - task: ArchiveFiles@2
+    inputs:
+      rootFolderOrFile: '$(System.DefaultWorkingDirectory)' # Include all files in the working directory
+      includeRootFolder: false # Avoid nesting files in an extra folder
+      archiveType: 'zip' # Create a zip archive
+      archiveFile: '$(Build.ArtifactStagingDirectory)/FANGJewellerz.zip' # Output zip file path
+    displayName: 'Archive website files'
+
+  # Step 5: Publish build artifacts
+  - task: PublishBuildArtifacts@1
+    inputs:
+      pathToPublish: '$(Build.ArtifactStagingDirectory)' # Publish the artifact directory
+      artifactName: 'drop' # Name of the published artifact
+      publishLocation: 'Container' # Save artifacts to the pipeline container
+    displayName: 'Publish build artifacts'
