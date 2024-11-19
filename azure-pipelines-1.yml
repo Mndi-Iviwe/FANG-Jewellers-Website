@@ -1,0 +1,54 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+
+
+trigger:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+
+  # Step 1: Install PHP manually using a script
+  - script: |
+      sudo apt-get update
+      sudo apt-get install -y software-properties-common
+      sudo add-apt-repository -y ppa:ondrej/php
+      sudo apt-get update
+      sudo apt-get install -y php7.4 php7.4-cli php7.4-mbstring php7.4-xml php7.4-curl
+      php -v
+    displayName: 'Install PHP 7.4'
+
+
+  # Step 2: Install dependencies (if Composer is used)
+  - script: |
+      sudo apt-get update
+      sudo apt-get install -y composer
+      composer install
+    displayName: 'Install dependencies'
+
+  # Step 3: Run Lint or Tests (if applicable)
+  - script: |
+      php -l Index.php
+      echo "Linting completed."
+    displayName: 'PHP Lint Check'
+
+  # Step 4: Archive the files for deployment
+  - task: ArchiveFiles@2
+    inputs:
+      rootFolderOrFile: '$(System.DefaultWorkingDirectory)'
+      includeRootFolder: false
+      archiveType: 'zip'
+      archiveFile: '$(Build.ArtifactStagingDirectory)/FANGJewellerz.zip'
+
+  # Step 5: Publish the build artifacts
+  - task: PublishBuildArtifacts@1
+    inputs:
+      pathToPublish: '$(Build.ArtifactStagingDirectory)'
+      artifactName: 'drop'
+      publishLocation: 'Container'
+
